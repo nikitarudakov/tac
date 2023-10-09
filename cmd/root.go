@@ -59,7 +59,7 @@ func initConfig() {
 		// Search config in home directory with name ".Traffic-Analyst-CLI" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".Traffic-Analyst-CLI")
+		viper.SetConfigName(".tac")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
