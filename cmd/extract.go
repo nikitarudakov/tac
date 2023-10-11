@@ -22,7 +22,9 @@ var extractCmd = &cobra.Command{
 		logger.Info().Msg("Unzip command was called")
 
 		if len(args) > 1 {
-			file.DecompressZipFile(args[0], args[1])
+			if err := file.DecompressZipFile(args[0], args[1]); err != nil {
+				return
+			}
 		}
 	},
 }
