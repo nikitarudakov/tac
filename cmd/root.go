@@ -1,21 +1,23 @@
 /*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
+Copyright © 2023 NAME HERE <nik.datascience@gmail.com>
 */
 package cmd
 
 import (
 	"fmt"
-	"os"
-
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 var cfgFile string
+var defaultLogger zerolog.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "Traffic-Analyst-CLI",
+	Use:   "Traffic Analyst CLI",
 	Short: "CLI for Traffic Analysis and Reporting",
 	Long:  `Use short commands that support ETL, Visualization, Parsing, etc.`,
 	// Uncomment the following line if your bare application
@@ -35,11 +37,16 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	loggerLevel := zerolog.Level(viper.GetInt("logger.log_level"))
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(loggerLevel)
+
+	defaultLogger.Info().Msg("Logger is running ...")
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.Traffic-Analyst-CLI.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tac.json)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -58,7 +65,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".Traffic-Analyst-CLI" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigType("yaml")
+		viper.SetConfigType("json")
 		viper.SetConfigName(".tac")
 	}
 
