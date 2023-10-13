@@ -1,2 +1,2 @@
-# Traffic-Analyst-CLI
-CLI for Traffic Analysis and Reporting
+# CLI for File Management
+CLI for managing files on local computer
