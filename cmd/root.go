@@ -37,8 +37,12 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	loggerLevel := zerolog.Level(viper.GetInt("logger.log_level"))
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr}).Level(loggerLevel)
+	zerolog.SetGlobalLevel(-1)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+	log.Trace().
+		Int("logger_level", -1).
+		Msg("logger was set")
 
 	defaultLogger.Info().Msg("Logger is running ...")
 
@@ -46,7 +50,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.tac.json)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config zipfile (default is $HOME/.tac.json)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -56,7 +60,7 @@ func init() {
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
 	if cfgFile != "" {
-		// Use config file from the flag.
+		// Use config zip file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
 		// Find home directory.
@@ -71,8 +75,8 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
+	// If a config zipfile is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		fmt.Fprintln(os.Stderr, "Using config zipfile:", viper.ConfigFileUsed())
 	}
 }
