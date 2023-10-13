@@ -4,25 +4,25 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"github.com/nikitarudakov/tac/file"
-	"github.com/nikitarudakov/tac/logger"
+	"github.com/nikitarudakov/tac/zipfile"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 // extractCmd represents the extract command
 var extractCmd = &cobra.Command{
 	Use:   "unzip",
-	Short: "Unzip file",
-	Long:  `To unzip file pass file/to/path as an argument`,
+	Short: "Unzip zipfile",
+	Long:  `To unzip zipfile pass zipfile/to/path as an argument`,
 
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Info().Msg("Unzip command was called")
 
-		logger := logger.InitLogger()
-
-		logger.Info().Msg("Unzip command was called")
+		// Run validator of args
+		isFolder := true
 
 		if len(args) > 1 {
-			if err := file.DecompressZipFile(args[0], args[1]); err != nil {
+			if err := zipfile.Unzip(args[0], args[1], isFolder); err != nil {
 				return
 			}
 		}
