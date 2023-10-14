@@ -10,6 +10,9 @@ import (
 	"os"
 )
 
+// ValidateOutputPath validates whether folder already
+// exists at o - output path and return an error if
+// folder exists but user requested to create folder
 func ValidateOutputPath(o string, c bool) error {
 	if _, err := os.Stat(o); err != nil {
 		isNotExist := os.IsNotExist(err)
@@ -26,6 +29,7 @@ func ValidateOutputPath(o string, c bool) error {
 	return nil
 }
 
+// MkOutputDir makes directory at output path
 func MkOutputDir(outputPath string) error {
 	if err := ValidateOutputPath(outputPath, true); err != nil { // add "create" flag
 		log.Fatal().
@@ -48,35 +52,38 @@ func MkOutputDir(outputPath string) error {
 	return nil
 }
 
-// Unzip takes zip folder path and output path as inputs
-// Reads zip folder and saves its contents to new folder in outputPath
-func Unzip(inputPath string, outputPath string, isFolder bool) error {
-	zipContents, err := zip.OpenReader(inputPath)
+// Decompress takes compressed folder path and output path as inputs
+// Reads compressed folder and serves its contents to new folder in outputPath
+func Decompress(in Input, out Output) error {
+	zipContents, err := zip.OpenReader(in.path)
 	if err != nil {
 		log.Fatal().
-			Str("service", "Unzip").
+			Str("service", "Decompress").
 			Err(err).
 			Msg("fatal error! failed to read zip contents")
 	}
 	defer zipContents.Close()
 
 	log.Trace().
-		Str("input_path", inputPath).
-		Str("output_path", outputPath).
+		Str("input_path", in.path).
+		Str("output_path", out.path).
 		Send()
 
-	if err = MkOutputDir(outputPath); err != nil {
-		log.Warn().
-			Str("service", "Unzip").
-			Err(err).
-			Msg("warning! problem with creating output folder")
+	switch out.create {
+	case true:
+		if err = MkOutputDir(out.path); err != nil {
+			log.Warn().
+				Str("service", "Decompress").
+				Err(err).
+				Msg("warning! problem with creating output folder")
+		}
 	}
 
-	folderContentOutputPath := getFolderContentOutputPath(inputPath, outputPath)
+	folderContentOutputPath := getFolderContentOutputPath(in.path, out.path)
 
 	if err = MkOutputDir(folderContentOutputPath); err != nil {
 		log.Warn().
-			Str("service", "Unzip").
+			Str("service", "Decompress").
 			Err(err).
 			Msg("warning! problem with creating folder for content")
 	}
@@ -87,7 +94,7 @@ func Unzip(inputPath string, outputPath string, isFolder bool) error {
 			log.Warn().Err(err).Send()
 		}
 
-		fileContentOutputPath := getFileContentOutputPath(outputPath, file.Name)
+		fileContentOutputPath := getFileContentOutputPath(out.path, file.Name)
 
 		fileDest, err := CreateFile(fileContentOutputPath)
 		if err != nil {
@@ -105,6 +112,8 @@ func Unzip(inputPath string, outputPath string, isFolder bool) error {
 	return nil
 }
 
+// ReadCompressedFile reads compressed file of zip format
+// and return file reader along with a potential error
 func ReadCompressedFile(file *zip.File) (io.ReadCloser, error) {
 	fileReader, err := file.Open()
 
@@ -118,6 +127,7 @@ func ReadCompressedFile(file *zip.File) (io.ReadCloser, error) {
 	return fileReader, nil
 }
 
+// CreateFile creates file with a name of file stored in compressed zip folder
 func CreateFile(path string) (*os.File, error) {
 	file, err := os.Create(path)
 	if err != nil {
@@ -128,6 +138,9 @@ func CreateFile(path string) (*os.File, error) {
 	return file, nil
 }
 
+// CopyContentToFile copies from src to dst
+// Src is the file from compressed folder whereas dst is the newly created
+// file at output path
 func CopyContentToFile(dst io.Writer, src io.Reader) error {
 	_, err := io.Copy(dst, src)
 	if err != nil {
