@@ -17,9 +17,13 @@ var defaultLogger zerolog.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "Traffic Analyst CLI",
-	Short: "CLI for Traffic Analysis and Reporting",
-	Long:  `Use short commands that support ETL, Visualization, Parsing, etc.`,
+	Use:   "tac",
+	Short: "CLI for managing files on your local PC",
+	Long: `Welcome to Tac - your go-to tool for managing files easily via the command line. 
+
+Use short commands for file decompression, renaming, and format conversion. 
+
+Simplify complex tasks and boost your productivity effortlessly.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -50,11 +54,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config zipfile (default is $HOME/.tac.json)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config path (default is $HOME/.tac.json)")
 }
 
 // initConfig reads in config file and ENV variables if set.
