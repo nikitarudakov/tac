@@ -9,20 +9,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var zip bool
+
 // extractCmd represents the extract command
 var extractCmd = &cobra.Command{
-	Use:   "unzip",
-	Short: "Unzip zipfile",
-	Long:  `To unzip zipfile pass zipfile/to/path as an argument`,
+	Use:   "decompress",
+	Short: "Decompress files from various formats",
+	Long: `The decompress command in Tac allows you to effortlessly extract compressed files 
+from a diverse range of formats, including but not limited to zip, tar, gzip, and more.`,
 
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info().Msg("Unzip command was called")
 
-		// Run validator of args
-		isFolder := true
-
 		if len(args) > 1 {
-			if err := zipfile.Unzip(args[0], args[1], isFolder); err != nil {
+			in := zipfile.Input{}
+			zipFlag, _ := cmd.Flags().GetBool("zip")
+			in.SetInput(args[0], zipFlag)
+
+			out := zipfile.Output{}
+			createFlag, _ := cmd.Flags().GetBool("create")
+			out.SetOutput(args[1], createFlag)
+
+			if err := zipfile.Decompress(in, out); err != nil {
 				return
 			}
 		}
@@ -32,13 +40,15 @@ var extractCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(extractCmd)
 
-	// Here you will define your flags and configuration settings.
+	extractCmd.Flags().BoolVarP(
+		&zip,
+		"zip", "z",
+		false, "use to decompress zip files (default is false)",
+	)
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// extractCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// extractCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	extractCmd.Flags().BoolVarP(
+		&zip,
+		"create", "c",
+		false, "use to create output folder (default is false)",
+	)
 }
