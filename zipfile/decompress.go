@@ -5,10 +5,36 @@ package zipfile
 import (
 	"archive/zip"
 	"fmt"
+	"github.com/nikitarudakov/tac/fileutils"
 	"github.com/rs/zerolog/log"
 	"io"
 	"os"
 )
+
+// Input stores input data such as path and compression formats
+type Input struct {
+	path string
+	zip  bool
+}
+
+// Output stores output data such as path and create boolean
+// which is used while creating folder at path
+type Output struct {
+	path   string
+	create bool
+}
+
+// SetInput sets Input fields
+func (in *Input) SetInput(path string, zip bool) {
+	in.path = path
+	in.zip = zip
+}
+
+// SetOutput sets Output fields
+func (in *Output) SetOutput(path string, create bool) {
+	in.path = path
+	in.create = create
+}
 
 // ValidateOutputPath validates whether folder already
 // exists at o - output path and return an error if
@@ -79,7 +105,7 @@ func Decompress(in Input, out Output) error {
 		}
 	}
 
-	folderContentOutputPath := getFolderContentOutputPath(in.path, out.path)
+	folderContentOutputPath := fileutils.GetItemContentOutputPath(in.path, out.path)
 
 	if err = MkOutputDir(folderContentOutputPath); err != nil {
 		log.Warn().
@@ -94,7 +120,7 @@ func Decompress(in Input, out Output) error {
 			log.Warn().Err(err).Send()
 		}
 
-		fileContentOutputPath := getFileContentOutputPath(out.path, file.Name)
+		fileContentOutputPath := fileutils.GetFileContentOutputPath(out.path, file.Name)
 
 		fileDest, err := CreateFile(fileContentOutputPath)
 		if err != nil {
