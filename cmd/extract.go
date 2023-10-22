@@ -9,7 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var zip bool
+var (
+	zip    bool
+	create bool
+)
 
 // extractCmd represents the extract command
 var extractCmd = &cobra.Command{
@@ -23,12 +26,10 @@ from a diverse range of formats, including but not limited to zip, tar, gzip, an
 
 		if len(args) > 1 {
 			in := zipfile.Input{}
-			zipFlag, _ := cmd.Flags().GetBool("zip")
-			in.SetInput(args[0], zipFlag)
+			in.SetInput(args[0], zip)
 
 			out := zipfile.Output{}
-			createFlag, _ := cmd.Flags().GetBool("create")
-			out.SetOutput(args[1], createFlag)
+			out.SetOutput(args[1], create)
 
 			if err := zipfile.Decompress(in, out); err != nil {
 				return
