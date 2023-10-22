@@ -4,23 +4,39 @@ Copyright © 2023 NAME HERE <nik.datascience@gmail.com>
 package cmd
 
 import (
-	"fmt"
 	"github.com/nikitarudakov/tac/filenames"
 	"github.com/rs/zerolog/log"
+	"os"
 
 	"github.com/spf13/cobra"
+)
+
+var (
+	source string
+	single bool
 )
 
 // renameCmd represents the rename command
 var renameCmd = &cobra.Command{
 	Use:   "rename",
-	Short: "",
-	Long:  ``,
+	Short: "Rename files that follow some pattern",
+	Long: `Rename command helps you manage naming of directories and files on 
+your local computer. You can even specify patterns for naming`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("rename called")
 
-		if err := filenames.RenameItemWithPath(args[0], args[1]); err != nil {
-			log.Error().Str("path", args[0]).Err(err).Msg("error renaming item")
+		if single && source != "" {
+			if err := filenames.RenameItemWithPath(source, args[0]); err != nil {
+				log.Error().Str("path", source).Err(err).Msg("error renaming item")
+			}
+
+			return
+		} else if source == "" {
+			os.Exit(1)
+		}
+
+		if err := filenames.RenameItemsAtPath(source, "", []filenames.GroupRename{}); err != nil {
+			log.Error().Str("path", source).Err(err).Msg("error renaming items")
+			return
 		}
 	},
 }
@@ -28,13 +44,15 @@ var renameCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(renameCmd)
 
-	// Here you will define your flags and configuration settings.
+	renameCmd.Flags().StringVar(
+		&source,
+		"src",
+		"",
+		"Set source of file(s) to rename")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// renameCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// renameCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	renameCmd.Flags().BoolVarP(
+		&single,
+		"single", "s",
+		true,
+		"Set to false to rename files in bulk")
 }
