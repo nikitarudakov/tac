@@ -34,10 +34,10 @@ your local computer. You can even specify patterns for naming`,
 			os.Exit(1)
 		}
 
-		if err := filenames.RenameItemsAtPath(source, "", []filenames.GroupRename{}); err != nil {
+		/*if err := filenames.RenameItemsAtPath(source, ""); err != nil {
 			log.Error().Str("path", source).Err(err).Msg("error renaming items")
 			return
-		}
+		}*/
 	},
 }
 

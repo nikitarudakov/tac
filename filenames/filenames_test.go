@@ -1,6 +1,18 @@
 package filenames
 
-import "testing"
+import (
+	"testing"
+)
+
+func replTest(string) string {
+	return ""
+}
+
+type GroupRename struct {
+	groupName string
+	renameTo  string
+	repl      func(string) string
+}
 
 func TestRenameItemsAtPath(t *testing.T) {
 	testCases := []struct {
@@ -9,24 +21,13 @@ func TestRenameItemsAtPath(t *testing.T) {
 		{"../input/renaming/test"},
 	}
 
-	groupRename := []GroupRename{
-		{
-			groupName: "Name",
-			renameTo:  "MyFile",
-		},
-	}
-
 	for _, test := range testCases {
 		test := test
 
 		t.Run(test.path, func(t *testing.T) {
 			t.Parallel()
 
-			err := RenameItemsAtPath(
-				test.path,
-				"(?P<Name>File)_(?P<Date>.+?).xlsx",
-				groupRename,
-			)
+			err := RenameFileWithPattern(test.path, "(?P<Name>Scoring)_(?P<Date>.+?).xlsx")
 			if err != nil {
 				t.Error(err)
 			}
