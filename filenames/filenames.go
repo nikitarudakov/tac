@@ -30,46 +30,85 @@ func RenameItemWithPath(path string, newName string) error {
 	return nil
 }
 
-func RenameFileWithPattern(path string, exprPattern string, exprGroupMap map[string]groupio.ExprGroup) error {
+func handleSubexpRenaming(
+	lastIndex int,
+	subexpIndices []int,
+	subexpNames []string,
+	subexpIndex int,
+	exprGroupMap groupio.ExprGroupMapper,
+	filename string,
+) (string, int) {
+	var subexpRenamed string
+
+	leftSubexpIndex, rightSubexpIndex := subexpIndices[subexpIndex], subexpIndices[subexpIndex+1]
+
+	// subexp actual string for fileName
+	subexpStr := filename[leftSubexpIndex:rightSubexpIndex]
+
+	exprGroupIndex := subexpIndex / 2
+	if exprGroupIndex <= len(subexpNames) {
+		subexpName := subexpNames[exprGroupIndex]
+
+		if exprGroup, ok := exprGroupMap[subexpName]; ok {
+			replResp := exprGroup.Repl(subexpStr)
+
+			subexpRenamed = filename[lastIndex:subexpIndices[subexpIndex]] + replResp
+
+			lastIndex = subexpIndices[subexpIndex+1]
+
+			return subexpRenamed, lastIndex
+		}
+
+		subexpRenamed = filename[lastIndex:subexpIndices[subexpIndex]] + subexpStr
+		lastIndex = subexpIndices[subexpIndex+1]
+	}
+
+	return subexpRenamed, lastIndex
+}
+
+func renameFileNamesWithPattern(filename string, re *regexp.Regexp, exprGroupMap groupio.ExprGroupMapper) error {
+	result := ""
+	lastIndex := 0
+
+	subexpIndices := re.FindStringSubmatchIndex(filename)
+	subexpNames := re.SubexpNames()
+
+	if len(subexpIndices) < 2 {
+		return nil
+	}
+
+	for i := 2; i < len(subexpIndices); i += 2 {
+		subexpRenamed, newLastIndex := handleSubexpRenaming(
+			lastIndex, subexpIndices, subexpNames,
+			i, exprGroupMap, filename,
+		)
+
+		lastIndex = newLastIndex
+		result += subexpRenamed
+	}
+
+	result += filename[lastIndex:]
+
+	fmt.Println(result)
+
+	return nil
+}
+
+func walkInDirAndRenameFiles(path string, exprPattern string, exprGroupMap groupio.ExprGroupMapper) error {
 	re, _ := regexp.Compile(exprPattern)
 
 	err := filepath.WalkDir(path, func(path string, d fs.DirEntry, err error) error {
 		if !d.IsDir() {
-			result := ""
-			lastIndex := 0
+			err := renameFileNamesWithPattern(d.Name(), re, exprGroupMap)
 
-			submatchIndices := re.FindStringSubmatchIndex(d.Name())
-			submatchNames := re.SubexpNames()
-
-			if len(submatchIndices) < 2 {
-				// TODO what we do if submatchIndices length < 2
-				return nil
+			if err != nil {
+				return err
 			}
-
-			for i := 2; i < len(submatchIndices); i += 2 {
-				var exprGroup groupio.ExprGroup
-
-				exprGroupIndex := i / 2
-
-				if exprGroupIndex <= len(submatchNames) {
-					exprGroup = exprGroupMap[submatchNames[exprGroupIndex]]
-				}
-
-				submatchStr := d.Name()[submatchIndices[i]:submatchIndices[i+1]]
-
-				replResp := exprGroup.Repl(submatchStr)
-
-				result += d.Name()[lastIndex:submatchIndices[i]] + replResp
-
-				lastIndex = submatchIndices[i+1]
-			}
-
-			result += d.Name()[lastIndex:]
-			fmt.Println(result)
 		}
 
 		return nil
 	})
+
 	if err != nil {
 		return err
 	}
