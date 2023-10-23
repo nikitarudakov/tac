@@ -39,7 +39,7 @@ func TestRenameItemsAtPath(t *testing.T) {
 		t.Run(test.path, func(t *testing.T) {
 			t.Parallel()
 
-			err := RenameFileWithPattern(test.path,
+			err := walkInDirAndRenameFiles(test.path,
 				"(?P<Name>File)_(?P<Date>.+?).xlsx",
 				test.exprGroupMapper)
 			if err != nil {
